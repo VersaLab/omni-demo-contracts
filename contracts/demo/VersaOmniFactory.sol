@@ -121,18 +121,18 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
     }
 
     function _nonblockingLzReceive(
-        uint16 srcChainId,
-        bytes calldata srcAddress,
-        uint64 nonce,
-        bytes calldata payload
+        uint16 _srcChainId,
+        bytes calldata _srcAddress,
+        uint64 _nonce,
+        bytes calldata _payload
     ) internal override {
-        (srcChainId, nonce);
-        require(address(uint160(bytes20(srcAddress))) == address(this), "VersaFactory: factory address incorrect");
-        address account = address(uint160(bytes20(payload[:32])));
+        (_srcChainId, _nonce);
+        require(address(uint160(bytes20(_srcAddress))) == address(this), "VersaFactory: factory address incorrect");
+        address account = address(uint160(bytes20(_payload[:32])));
         require(account.code.length == 0, "VersaFactory: account already exists");
-        (bool success, ) = address(this).excessivelySafeCall(gasleft(), 0, payload[64:]);
+        (bool success, ) = address(this).excessivelySafeCall(gasleft(), 0, _payload[64:]);
         require(success, "VersaFactory: remote create account failed");
-        bytes32 salt2 = bytes32(payload[32:64]);
+        bytes32 salt2 = bytes32(_payload[32:64]);
         _walletSalts[account] = salt2;
     }
 
