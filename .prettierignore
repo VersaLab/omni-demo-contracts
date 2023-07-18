@@ -1,0 +1,10 @@
+*.json
+*.js
+*.md
+*.yaml
+@aa-template/
+@safe-contracts/
+typechain-types/
+coverage/
+.github
+.prettierrc
