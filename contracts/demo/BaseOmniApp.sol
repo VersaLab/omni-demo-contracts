@@ -16,9 +16,9 @@ abstract contract BaseOmniApp is NonblockingLzApp {
 
     function _nonblockingLzReceive(
         uint16 _srcChainId,
-        bytes calldata _srcAddress,
+        bytes memory _srcAddress,
         uint64 _nonce,
-        bytes calldata _payload
+        bytes memory _payload
     ) internal virtual override {}
 
     function setRelayer(uint16 _dstChainId, address _sendRelayer, address _receiveRelayer) external onlyOwner {

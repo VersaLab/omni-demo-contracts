@@ -9,6 +9,7 @@ import "../VersaWallet.sol";
 
 contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
     using ExcessivelySafeCall for address;
+    using BytesLib for bytes;
 
     address public immutable versaSingleton;
     address public immutable defaultFallbackHandler;
@@ -122,17 +123,17 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
 
     function _nonblockingLzReceive(
         uint16 _srcChainId,
-        bytes calldata _srcAddress,
+        bytes memory _srcAddress,
         uint64 _nonce,
-        bytes calldata _payload
+        bytes memory _payload
     ) internal override {
         (_srcChainId, _nonce);
         require(address(uint160(bytes20(_srcAddress))) == address(this), "VersaFactory: factory address incorrect");
-        address account = address(uint160(bytes20(_payload[:32])));
+        address account = address(uint160(bytes20(_payload.slice(0, 32))));
         require(account.code.length == 0, "VersaFactory: account already exists");
-        (bool success, ) = address(this).excessivelySafeCall(gasleft(), 0, _payload[64:]);
+        (bool success, ) = address(this).excessivelySafeCall(gasleft(), 0, _payload.slice(64, _payload.length - 64));
         require(success, "VersaFactory: remote create account failed");
-        bytes32 salt2 = bytes32(_payload[32:64]);
+        bytes32 salt2 = bytes32(_payload.slice(32, 64));
         _walletSalts[account] = salt2;
     }
 
