@@ -1,11 +1,13 @@
 {
 	"entryPoint": "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
-	"paymaster": "0xf9dcDD7113Fa9dC7176501631E3Ef9fb483dE02b",
+	"paymaster": "0x41003D1852D67045AaCce9E996b1BdA482633331",
 	"versaAccountFactory": "0x41ABCAbbc18fA14b4B82b4ffD7467CdB76b4ff4a",
 	"versaSingleton": "0x878edaC226A90d3F9051Ef09cE1fD4A2638dA3C4",
 	"compatibilityFallbackHandler": "0x34Cd11043Cb216EBA656F261A657B87331F32b79",
-	"spendingLimitHooks": "0xfBe5e0C105F817B9967DFB8555462f6C80A8F2Fb",
-	"ecdsaValidator": "0xcA9ea06bC14cE3C325fe274d56a4B26851762E5E",
-	"multisigValidator": "0x4DfBc86Ca1c8264708a34f0a95CB2F70b8DFB6a0",
-	"ellipticCurve": "0x"
+	"spendingLimitHooks": "0x5E02C56654FEB2d414225E40aD3BAA2A1CC3f0d8",
+	"ecdsaValidator": "0x0e2c43aFB3E82D66d4B1ab3925cDf5134985A0b7",
+	"multisigValidator": "0x6A667E351cAa202BAa9e86429a285FE27490dA4b",
+	"ellipticCurve": "0x",
+	"lzEndpoint": "0xf69186dfBa60DdB133E91E9A4B5673624293d8F8",
+	"versaOmniFactory": "0xC1281D82CA6Af12C3Ea3244914016115D8189C03"
 }

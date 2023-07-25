@@ -167,6 +167,8 @@ export async function estimateGasAndSendUserOpAndGetReceipt(options: {
         }
         await tx.wait();
     }
+    userOp.maxFeePerGas = userOp.maxFeePerGas * 2;
+    userOp.maxPriorityFeePerGas = userOp.maxPriorityFeePerGas * 2;
     userOp.signature = hexConcat([validator, "0x00", fakeSignature]);
     let [gas, error] = await estimateGas(bundlerURL, userOp, entryPoint);
     console.log("estimate gas:", gas);
@@ -175,7 +177,7 @@ export async function estimateGasAndSendUserOpAndGetReceipt(options: {
     // }
     userOp.callGasLimit = hexlify(gas.callGasLimit);
     userOp.verificationGasLimit = hexlify(gas.verificationGas);
-    userOp.preVerificationGas = hexlify(gas.preVerificationGas + 10000);
+    userOp.preVerificationGas = hexlify(gas.preVerificationGas);
     console.log("through paymaster?", paymasterURL !== "");
     if (paymasterURL !== "") {
         let [paymasterAndData] = await getPaymasterAndData(paymasterURL, userOp, gasToken);

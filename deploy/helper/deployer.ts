@@ -15,12 +15,30 @@ export interface VersaAccountFactoryData {
     defaultFallbackHandler: string;
 }
 
+export interface VersaOmniFactoryData {
+    versaSingleton: string;
+    defaultFallbackHandler: string;
+    lzEndpoint: string;
+}
+
 export async function deployVersaAccountFactory(data: VersaAccountFactoryData) {
     const VersaAccountFactory = await ethers.getContractFactory("VersaAccountFactory");
     const versaAccountFactory = await VersaAccountFactory.deploy(data.versaSingleton, data.defaultFallbackHandler);
     await versaAccountFactory.deployed();
     console.log("VersaAccountFactory deployed to:", versaAccountFactory.address);
     return versaAccountFactory;
+}
+
+export async function deployVersaOmniFactory(data: VersaOmniFactoryData) {
+    const VersaOmniFactory = await ethers.getContractFactory("VersaOmniFactory");
+    const versaOmniFactory = await VersaOmniFactory.deploy(
+        data.versaSingleton,
+        data.defaultFallbackHandler,
+        data.lzEndpoint
+    );
+    await versaOmniFactory.deployed();
+    console.log("VersaOmniFactory deployed to:", versaOmniFactory.address);
+    return versaOmniFactory;
 }
 
 export async function deployVersaSingleton(entryPoint: string) {

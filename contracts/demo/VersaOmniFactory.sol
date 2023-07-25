@@ -3,23 +3,16 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@safe-contracts/contracts/proxies/SafeProxyFactory.sol";
-import "@layerzerolabs/solidity-examples/contracts/util/ExcessivelySafeCall.sol";
 import "./BaseOmniApp.sol";
 import "../VersaWallet.sol";
 
 contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
-    using ExcessivelySafeCall for address;
     using BytesLib for bytes;
 
     address public immutable versaSingleton;
     address public immutable defaultFallbackHandler;
 
     mapping(address wallet => bytes32 salt) internal _walletSalts;
-
-    modifier onlySelf() {
-        require(msg.sender == address(this), "VersaFactory: only self call allowed");
-        _;
-    }
 
     constructor(address _versaSingleton, address _fallbackHandler, address _lzEndpoint) BaseOmniApp(_lzEndpoint) {
         versaSingleton = _versaSingleton;
@@ -35,18 +28,41 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
         address[] memory modules,
         bytes[] memory moduleInitData,
         uint256 salt
-    ) public view returns (address addr) {
-        bytes32 salt2 = _getSalt2(
+    ) external view returns (address addr) {
+        bytes memory initializer = _getInitializer(
             validators,
             validatorInitData,
             validatorType,
             hooks,
             hooksInitData,
             modules,
-            moduleInitData,
-            salt
+            moduleInitData
         );
+        bytes32 salt2 = _getSalt2(initializer, salt);
         addr = _getSpecificAddressWithNonce(salt2);
+    }
+
+    function getPayload(
+        address wallet,
+        address[] memory validators,
+        bytes[] memory validatorInitData,
+        VersaWallet.ValidatorType[] memory validatorType,
+        address[] memory hooks,
+        bytes[] memory hooksInitData,
+        address[] memory modules,
+        bytes[] memory moduleInitData
+    ) external view returns (bytes memory payload) {
+        bytes memory initializer = _getInitializer(
+            validators,
+            validatorInitData,
+            validatorType,
+            hooks,
+            hooksInitData,
+            modules,
+            moduleInitData
+        );
+        bytes32 salt2 = _walletSalts[wallet];
+        payload = abi.encode(wallet, salt2, initializer);
     }
 
     function createAccount(
@@ -59,33 +75,19 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
         bytes[] memory moduleInitData,
         uint256 salt
     ) public returns (address account) {
-        bytes32 salt2 = _getSalt2(
+        bytes memory initializer = _getInitializer(
             validators,
             validatorInitData,
             validatorType,
             hooks,
             hooksInitData,
             modules,
-            moduleInitData,
-            salt
+            moduleInitData
         );
+        bytes32 salt2 = _getSalt2(initializer, salt);
         address addr = _getSpecificAddressWithNonce(salt2);
         require(addr.code.length == 0, "VersaFactory: account already exists");
-        account = address(
-            createChainSpecificProxyWithNonce(
-                versaSingleton,
-                _getInitializer(
-                    validators,
-                    validatorInitData,
-                    validatorType,
-                    hooks,
-                    hooksInitData,
-                    modules,
-                    moduleInitData
-                ),
-                salt
-            )
-        );
+        account = address(createChainSpecificProxyWithNonce(versaSingleton, initializer, salt));
         require(addr == account, "VersaFactory: account address incorrect");
         _walletSalts[account] = salt2;
     }
@@ -100,7 +102,7 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
         address[] memory modules,
         bytes[] memory moduleInitData
     ) public payable {
-        bytes memory payload = _getPayload(
+        bytes memory initializer = _getInitializer(
             validators,
             validatorInitData,
             validatorType,
@@ -109,16 +111,8 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
             modules,
             moduleInitData
         );
+        bytes memory payload = _getPayload(initializer);
         _sendOmniMessage(dstChainId, payload);
-    }
-
-    function createProxyWithOmni(
-        address singleton,
-        bytes memory initializer,
-        bytes32 salt2
-    ) public onlySelf returns (SafeProxy proxy) {
-        proxy = deployProxy(singleton, initializer, salt2);
-        emit ProxyCreation(proxy, singleton);
     }
 
     function _nonblockingLzReceive(
@@ -128,13 +122,14 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
         bytes memory _payload
     ) internal override {
         (_srcChainId, _nonce);
-        require(address(uint160(bytes20(_srcAddress))) == address(this), "VersaFactory: factory address incorrect");
-        address account = address(uint160(bytes20(_payload.slice(0, 32))));
-        require(account.code.length == 0, "VersaFactory: account already exists");
-        (bool success, ) = address(this).excessivelySafeCall(gasleft(), 0, _payload.slice(64, _payload.length - 64));
-        require(success, "VersaFactory: remote create account failed");
-        bytes32 salt2 = bytes32(_payload.slice(32, 64));
-        _walletSalts[account] = salt2;
+        address remote = address(bytes20(_srcAddress.slice(0, 20)));
+        require(remote == address(this), "VersaFactory: factory address incorrect");
+        (address addr, bytes32 salt2, bytes memory initialer) = abi.decode(_payload, (address, bytes32, bytes));
+        require(addr.code.length == 0, "VersaFactory: account already exists");
+        SafeProxy account = deployProxy(versaSingleton, initialer, salt2);
+        require(addr == address(account), "VersaFactory: account address incorrect");
+        _walletSalts[address(account)] = salt2;
+        emit ProxyCreation(account, versaSingleton);
     }
 
     function _getInitializer(
@@ -161,51 +156,12 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
         );
     }
 
-    function _getPayload(
-        address[] memory validators,
-        bytes[] memory validatorInitData,
-        VersaWallet.ValidatorType[] memory validatorType,
-        address[] memory hooks,
-        bytes[] memory hooksInitData,
-        address[] memory modules,
-        bytes[] memory moduleInitData
-    ) internal view returns (bytes memory payload) {
-        bytes memory initializer = _getInitializer(
-            validators,
-            validatorInitData,
-            validatorType,
-            hooks,
-            hooksInitData,
-            modules,
-            moduleInitData
-        );
+    function _getPayload(bytes memory initializer) internal view returns (bytes memory payload) {
         bytes32 salt2 = _walletSalts[msg.sender];
-        payload = abi.encode(
-            msg.sender,
-            salt2,
-            abi.encodeCall(this.createProxyWithOmni, (versaSingleton, initializer, salt2))
-        );
+        payload = abi.encode(msg.sender, salt2, initializer);
     }
 
-    function _getSalt2(
-        address[] memory validators,
-        bytes[] memory validatorInitData,
-        VersaWallet.ValidatorType[] memory validatorType,
-        address[] memory hooks,
-        bytes[] memory hooksInitData,
-        address[] memory modules,
-        bytes[] memory moduleInitData,
-        uint256 salt
-    ) internal view returns (bytes32 salt2) {
-        bytes memory initializer = _getInitializer(
-            validators,
-            validatorInitData,
-            validatorType,
-            hooks,
-            hooksInitData,
-            modules,
-            moduleInitData
-        );
+    function _getSalt2(bytes memory initializer, uint256 salt) internal view returns (bytes32 salt2) {
         salt2 = keccak256(abi.encodePacked(keccak256(initializer), salt, getChainId()));
     }
 

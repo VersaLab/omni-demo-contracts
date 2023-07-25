@@ -7,11 +7,17 @@ abstract contract BaseOmniApp is NonblockingLzApp {
     constructor(address _lzEndpoint) NonblockingLzApp(_lzEndpoint) {}
 
     function estimateNativeFee(uint16 _dstChainId, bytes calldata _payload) public view returns (uint256 _nativeFee) {
-        (_nativeFee, ) = lzEndpoint.estimateFees(_dstChainId, address(this), _payload, false, bytes(""));
+        uint16 ADAPTER_PARAMS_VERSION = 1;
+        uint256 ADAPTER_PARAMS_GASLIMIT = 2000000;
+        bytes memory adapterParams = abi.encodePacked(ADAPTER_PARAMS_VERSION, ADAPTER_PARAMS_GASLIMIT);
+        (_nativeFee, ) = lzEndpoint.estimateFees(_dstChainId, address(this), _payload, false, adapterParams);
     }
 
     function _sendOmniMessage(uint16 _dstChainId, bytes memory _payload) internal {
-        _lzSend(_dstChainId, _payload, payable(msg.sender), address(0), bytes(""), msg.value);
+        uint16 ADAPTER_PARAMS_VERSION = 1;
+        uint256 ADAPTER_PARAMS_GASLIMIT = 2000000;
+        bytes memory adapterParams = abi.encodePacked(ADAPTER_PARAMS_VERSION, ADAPTER_PARAMS_GASLIMIT);
+        _lzSend(_dstChainId, _payload, payable(msg.sender), address(0), adapterParams, msg.value);
     }
 
     function _nonblockingLzReceive(

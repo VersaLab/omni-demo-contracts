@@ -81,6 +81,54 @@ export async function generateWalletInitCode(options: {
     return { initCode, walletAddress };
 }
 
+export async function generateWalletInitCode2(options: {
+    versaFacotryAddr: string;
+    salt: number;
+    sudoValidator: string;
+    sudoValidatorInitData: string;
+    hooks?: string[];
+    hooksInitData?: string[];
+    modules?: string[];
+    moduleInitData?: string[];
+}) {
+    const {
+        versaFacotryAddr,
+        salt,
+        sudoValidator,
+        sudoValidatorInitData,
+        hooks = [],
+        hooksInitData = [],
+        modules = [],
+        moduleInitData = [],
+    } = options;
+    const versaFactory = await ethers.getContractAt("VersaOmniFactory", versaFacotryAddr);
+
+    let tx = await versaFactory.populateTransaction.createAccount(
+        [sudoValidator],
+        [sudoValidatorInitData],
+        [1],
+        hooks,
+        hooksInitData,
+        modules,
+        moduleInitData,
+        salt
+    );
+
+    let initCode = hexConcat([versaFacotryAddr, tx.data!]);
+    let walletAddress = await versaFactory.getSpecificAddressWithNonce(
+        [sudoValidator],
+        [sudoValidatorInitData],
+        [1],
+        hooks,
+        hooksInitData,
+        modules,
+        moduleInitData,
+        salt
+    );
+
+    return { initCode, walletAddress };
+}
+
 export interface userOp {
     sender: string;
     nonce: number;

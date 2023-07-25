@@ -8,27 +8,27 @@ import { AddressOne } from "../@safe-contracts/src";
 import { estimateGasAndSendUserOpAndGetReceipt, generateUserOp, sleep } from "./utils/bundler";
 import * as config from "./utils/config";
 
-const bundlerURL = config.mumbaiBundlerURL;
-const paymasterURL = config.mumbaiPaymasterURL;
-const entryPointAddress = mumbaiAddresses.entryPoint;
-const paymasterAddress = config.mumbaiPaymasterAddress;
-const spendingLimitAddress = mumbaiAddresses.spendingLimitHooks;
-const versaAccountFactoryAddress = mumbaiAddresses.versaAccountFactory;
-const ecdsaValidator = mumbaiAddresses.ecdsaValidator;
-const multisigValidator = mumbaiAddresses.multisigValidator;
-const targetERC20 = config.mumbaiUSDTAddress;
-const testNFTAddress = config.mumbaiTestNFTAddress;
+// const bundlerURL = config.mumbaiBundlerURL;
+// const paymasterURL = config.mumbaiPaymasterURL;
+// const entryPointAddress = mumbaiAddresses.entryPoint;
+// const paymasterAddress = config.mumbaiPaymasterAddress;
+// const spendingLimitAddress = mumbaiAddresses.spendingLimitHooks;
+// const versaAccountFactoryAddress = mumbaiAddresses.versaAccountFactory;
+// const ecdsaValidator = mumbaiAddresses.ecdsaValidator;
+// const multisigValidator = mumbaiAddresses.multisigValidator;
+// const targetERC20 = config.mumbaiUSDTAddress;
+// const testNFTAddress = config.mumbaiTestNFTAddress;
 
-// const bundlerURL = config.scrollTestnetBundlerURL;
-// const paymasterURL = config.scrollTestnetPaymasterURL;
-// const entryPointAddress = scrollTestnetAddresses.entryPoint;
-// const paymasterAddress = config.scrollTestnetPaymasterAddress;
-// const versaAccountFactoryAddress = scrollTestnetAddresses.versaAccountFactory;
-// const spendingLimitAddress = scrollTestnetAddresses.spendingLimitHooks;
-// const ecdsaValidator = scrollTestnetAddresses.ecdsaValidator;
-// const multisigValidator = scrollTestnetAddresses.multisigValidator;
-// const targetERC20 = config.scrollTestnetUSDTAddress;
-// const testNFTAddress = config.scrollTestnetTestNFTAddress;
+const bundlerURL = config.scrollTestnetBundlerURL;
+const paymasterURL = config.scrollTestnetPaymasterURL;
+const entryPointAddress = scrollTestnetAddresses.entryPoint;
+const paymasterAddress = config.scrollTestnetPaymasterAddress;
+const versaAccountFactoryAddress = scrollTestnetAddresses.versaAccountFactory;
+const spendingLimitAddress = scrollTestnetAddresses.spendingLimitHooks;
+const ecdsaValidator = scrollTestnetAddresses.ecdsaValidator;
+const multisigValidator = scrollTestnetAddresses.multisigValidator;
+const targetERC20 = config.scrollTestnetUSDTAddress;
+const testNFTAddress = config.scrollTestnetTestNFTAddress;
 
 const salt = config.salt;
 
