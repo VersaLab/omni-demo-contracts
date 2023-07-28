@@ -35,14 +35,14 @@ async function main() {
             console.log("unsupported network");
         }
     }
-    // const { initCode, walletAddress } = await generateWalletInitCode2({
-    //     versaFacotryAddr: versaOmniFactoryAddress,
-    //     salt: salt,
-    //     sudoValidator: ecdsaValidator,
-    //     sudoValidatorInitData: validatorInitdata,
-    // });
-    const initCode = "0x";
-    const walletAddress = "0xe88f293a7c959382baac4916d2fea3723dae46cb";
+    const { initCode, walletAddress } = await generateWalletInitCode2({
+        versaFacotryAddr: versaOmniFactoryAddress,
+        salt: salt,
+        sudoValidator: ecdsaValidator,
+        sudoValidatorInitData: validatorInitdata,
+    });
+    // const initCode = "0x";
+    // const walletAddress = "0xe88f293a7c959382baac4916d2fea3723dae46cb";
     const wallet = await ethers.getContractAt("VersaWallet", walletAddress);
     const callData = wallet.interface.encodeFunctionData("normalExecute", [
         signer.address,

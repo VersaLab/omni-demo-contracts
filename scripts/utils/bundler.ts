@@ -167,8 +167,8 @@ export async function estimateGasAndSendUserOpAndGetReceipt(options: {
         }
         await tx.wait();
     }
-    userOp.maxFeePerGas = userOp.maxFeePerGas * 2;
-    userOp.maxPriorityFeePerGas = userOp.maxPriorityFeePerGas * 2;
+    // userOp.maxFeePerGas = userOp.maxFeePerGas * 2;
+    // userOp.maxPriorityFeePerGas = userOp.maxPriorityFeePerGas * 2;
     userOp.signature = hexConcat([validator, "0x00", fakeSignature]);
     let [gas, error] = await estimateGas(bundlerURL, userOp, entryPoint);
     console.log("estimate gas:", gas);

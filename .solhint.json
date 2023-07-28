@@ -21,6 +21,7 @@
         "reason-string": "off",
         "state-visibility": "off",
         "var-name-mixedcase": "off",
+        "check-send-result": "off",
         "compiler-version": [
             "off"
         ]
