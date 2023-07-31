@@ -104,7 +104,7 @@ abstract contract OmniValidatorManager is SelfAuthorized {
         uint256 pageSize,
         ValidatorType validatorType
     ) external view returns (address[] memory array) {
-        require(validatorType != ValidatorType.Disabled, "Only valid validators");
+        require(validatorType != ValidatorType.Disabled, "OmniValidatorManager: Only valid validators");
 
         if (validatorType == ValidatorType.Sudo) {
             return sudoValidators.list(start, pageSize);
@@ -123,11 +123,11 @@ abstract contract OmniValidatorManager is SelfAuthorized {
         require(
             validatorType != ValidatorType.Disabled &&
                 IOmniValidator(validator).supportsInterface(type(IOmniValidator).interfaceId),
-            "Only valid validator allowed"
+            "OmniValidatorManager: Only valid validator allowed"
         );
         require(
             !sudoValidators.isExist(validator) && !normalValidators.isExist(validator),
-            "Validator has already been added"
+            "OmniValidatorManager: Validator has already been added"
         );
 
         if (validatorType == ValidatorType.Sudo) {
@@ -157,7 +157,7 @@ abstract contract OmniValidatorManager is SelfAuthorized {
         } else if (normalValidators.isExist(validator)) {
             normalValidators.remove(prevValidator, validator);
         } else {
-            revert("Validator doesn't exist");
+            revert("OmniValidatorManager: Validator doesn't exist");
         }
     }
 
@@ -175,7 +175,7 @@ abstract contract OmniValidatorManager is SelfAuthorized {
             _checkRemovingSudoValidator();
             normalValidators.add(validator);
         } else {
-            revert("Validator doesn't exist");
+            revert("OmniValidatorManager: Validator doesn't exist");
         }
     }
 
@@ -184,6 +184,6 @@ abstract contract OmniValidatorManager is SelfAuthorized {
      * @dev Throws an error if there are no remaining sudo validators.
      */
     function _checkRemovingSudoValidator() internal view {
-        require(!sudoValidators.isEmpty(), "Cannot remove the last remaining sudoValidator");
+        require(!sudoValidators.isEmpty(), "OmniValidatorManager: Cannot remove the last remaining sudoValidator");
     }
 }

@@ -40,18 +40,17 @@ contract VersaOmniWallet is
 
     event SyncExecuted(uint16 toChainId);
     event SyncReceived(uint16 fromChainId);
+    event Shit(bytes reason);
+
+    uint256[] internal _supportedChainIds;
+    mapping(uint256 supportedChainId => uint16 supportedLzChainId) internal _supportedLzChainIdsMap;
 
     string public constant VERSA_OMNI_VERSION = "1.0.0";
 
-    // `sudoExecute` function selector
     bytes4 internal constant SUDO_SPECIFIC_EXECUTE = this.sudoSpecificExecute.selector;
     bytes4 internal constant SUDO_SYNC_EXECUTE = this.sudoSyncExecute.selector;
-    // `batchSudoExecute` function selector
     bytes4 internal constant BATCH_SUDO_SPECIFIC_EXECUTE = this.batchSudoSpecificExecute.selector;
     bytes4 internal constant BATCH_SUDO_SYNC_EXECUTE = this.batchSudoSyncExecute.selector;
-
-    uint256[] public remoteChainIds;
-    mapping(uint256 remoteChainId => uint16 remoteLzChainId) internal _chainIdsMap;
 
     modifier onlyFromEntryPointOrLzEndpoint() {
         require(
@@ -70,27 +69,20 @@ contract VersaOmniWallet is
         _transferOwnership(address(0));
     }
 
-    /**
-     * @dev Initializes the VersaWallet contract.
-     * @param fallbackHandler The address of the fallback handler contract.
-     * @param validators The addresses of the validators.
-     * @param validatorInitData The initialization data for each validator.
-     * @param validatorType The types of the validators.
-     */
     function initialize(
         address fallbackHandler,
         address[] memory validators,
         ValidatorType[] memory validatorType,
         bytes[] memory validatorInitData,
-        uint256[] memory _remoteChainIds,
-        uint16[] memory remoteLzChainIds
+        uint256[] memory supportedChainIds,
+        uint16[] memory supportedLzChainIds
     ) external initializer {
         _checkInitializationDataLength(
             validators.length,
             validatorType.length,
             validatorInitData.length,
-            _remoteChainIds.length,
-            remoteLzChainIds.length
+            supportedChainIds.length,
+            supportedLzChainIds.length
         );
 
         internalSetFallbackHandler(fallbackHandler);
@@ -104,12 +96,28 @@ contract VersaOmniWallet is
         }
         require(hasSudoValidator, "VersaOmni: must set up the initial sudo validator");
 
-        _transferOwnership(address(this));
-        for (uint i = 0; i < _remoteChainIds.length; ++i) {
-            setTrustedRemoteAddress(remoteLzChainIds[i], abi.encode(address(this)));
-            _chainIdsMap[_remoteChainIds[i]] = remoteLzChainIds[i];
+        _transferOwnership(msg.sender);
+        for (uint i = 0; i < supportedChainIds.length; ++i) {
+            require(supportedChainIds[i] != 0, "VersaOmniFactory: chain id can not be zero");
+            setTrustedRemoteAddress(supportedLzChainIds[i], abi.encodePacked(address(this)));
+            _supportedChainIds.push(supportedChainIds[i]);
+            _supportedLzChainIdsMap[supportedChainIds[i]] = supportedLzChainIds[i];
         }
-        remoteChainIds = _remoteChainIds;
+        _transferOwnership(address(this));
+    }
+
+    function getSupportedChainIds() external view returns (uint256[] memory supportedChainIds) {
+        supportedChainIds = _supportedChainIds;
+    }
+
+    function addSupportedChain(uint256 supportedChainId, uint16 supportedLzChainId) public authorized {
+        require(
+            supportedChainId != 0 && _supportedLzChainIdsMap[supportedChainId] == 0,
+            "VersaOmni: this chain has been added"
+        );
+        setTrustedRemoteAddress(supportedLzChainId, abi.encodePacked(address(this)));
+        _supportedChainIds.push(supportedChainId);
+        _supportedLzChainIdsMap[supportedChainId] = supportedLzChainId;
     }
 
     /**
@@ -160,9 +168,9 @@ contract VersaOmniWallet is
         bytes memory data,
         Enum.Operation operation
     ) external onlyFromEntryPointOrLzEndpoint {
-        (uint16[] memory toLzChainIds, uint256[] memory nativeFees) = _checkAndGetSyncExecuteToAndFee();
+        (uint16[] memory toLzChainIds, uint256[] memory nativeFees) = _checkBeforeSyncExecute();
         _internalExecute(to, value, data, operation, ExecutionType.Sudo);
-        if (toLzChainIds.length != 0 && nativeFees.length != 0) {
+        if (toLzChainIds.length != 0) {
             _syncExecute(toLzChainIds, nativeFees);
         }
     }
@@ -181,26 +189,35 @@ contract VersaOmniWallet is
         Enum.Operation[] memory operation
     ) external onlyFromEntryPointOrLzEndpoint {
         _checkBatchDataLength(to.length, value.length, data.length, operation.length);
-        (uint16[] memory toLzChainIds, uint256[] memory nativeFees) = _checkAndGetSyncExecuteToAndFee();
+        (uint16[] memory toLzChainIds, uint256[] memory nativeFees) = _checkBeforeSyncExecute();
         for (uint256 i = 0; i < to.length; ++i) {
             _internalExecute(to[i], value[i], data[i], operation[i], ExecutionType.Sudo);
         }
-        if (toLzChainIds.length != 0 && nativeFees.length != 0) {
+        if (toLzChainIds.length != 0) {
             _syncExecute(toLzChainIds, nativeFees);
         }
     }
 
-    function _checkAndGetSyncExecuteToAndFee()
+    function _checkBeforeSyncExecute()
         internal
         view
         returns (uint16[] memory toLzChainIds, uint256[] memory nativeFees)
     {
         if (msg.sender != address(lzEndpoint)) {
+            uint dataLength = _supportedChainIds.length;
+            toLzChainIds = new uint16[](dataLength);
+            nativeFees = new uint256[](dataLength);
             uint256 totalNativeFee;
-            for (uint i = 0; i < remoteChainIds.length; ++i) {
-                toLzChainIds[i] = _chainIdsMap[remoteChainIds[i]];
-                nativeFees[i] = estimateNativeFee(toLzChainIds[i], msg.data);
-                totalNativeFee += nativeFees[i];
+            uint256 nativeChainId = getChainId();
+            for (uint i = 0; i < dataLength; ++i) {
+                if (_supportedChainIds[i] != nativeChainId) {
+                    toLzChainIds[i] = _supportedLzChainIdsMap[_supportedChainIds[i]];
+                    nativeFees[i] = estimateNativeFee(toLzChainIds[i], msg.data);
+                    totalNativeFee += nativeFees[i];
+                } else {
+                    toLzChainIds[i] = 0;
+                    nativeFees[i] = 0;
+                }
             }
             require(address(this).balance >= totalNativeFee, "VersaOmni: not enough native fee");
         }
@@ -208,8 +225,10 @@ contract VersaOmniWallet is
 
     function _syncExecute(uint16[] memory toLzChainIds, uint256[] memory nativeFees) internal {
         for (uint i = 0; i < toLzChainIds.length; ++i) {
-            _sendOmniMessage(toLzChainIds[i], msg.data, nativeFees[i]);
-            emit SyncExecuted(toLzChainIds[i]);
+            if (toLzChainIds[i] != 0) {
+                _sendOmniMessage(toLzChainIds[i], msg.data, nativeFees[i]);
+                emit SyncExecuted(toLzChainIds[i]);
+            }
         }
     }
 
@@ -230,9 +249,13 @@ contract VersaOmniWallet is
             "VersaOmni: sync receive selector doesn't match"
         );
 
-        (bool success, ) = address(this).excessivelySafeCall(gasleft(), 0, _payload);
-        require(success, "VersaOmni: sync receive failed");
-        emit SyncReceived(_srcChainId);
+        // (bool success, ) = address(this).excessivelySafeCall(gasleft(), 0, _payload);
+        // require(success, "VersaOmni: sync receive failed");
+        (bool success, bytes memory reason) = address(this).excessivelySafeCall(gasleft(), 150, _payload);
+        if (!success) {
+            emit Shit(reason);
+        }
+        // emit SyncReceived(_srcChainId);
     }
 
     /**
@@ -379,13 +402,13 @@ contract VersaOmniWallet is
         uint256 validatorsLen,
         uint256 validatorTypeLen,
         uint256 validatorInitDataLen,
-        uint256 remoteChainIdsLen,
-        uint256 remoteLzChainIdsLen
+        uint256 supportedChainIdsLen,
+        uint256 supportedLzChainIdsLen
     ) internal pure {
         require(
             validatorsLen == validatorTypeLen &&
                 validatorTypeLen == validatorInitDataLen &&
-                remoteChainIdsLen == remoteLzChainIdsLen,
+                supportedChainIdsLen == supportedLzChainIdsLen,
             "VersaOmni: data length doesn't match"
         );
     }
@@ -400,5 +423,18 @@ contract VersaOmniWallet is
         uint256 operationLen
     ) internal pure {
         require(toLen == valueLen && dataLen == operationLen && toLen == dataLen, "VersaOmni: invalid batch data");
+    }
+
+    /**
+     * @notice Returns the ID of the chain the contract is currently deployed on.
+     * @return The ID of the current chain as a uint256.
+     */
+    function getChainId() public view returns (uint256) {
+        uint256 id;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            id := chainid()
+        }
+        return id;
     }
 }

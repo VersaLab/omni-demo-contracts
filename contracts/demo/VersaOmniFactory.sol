@@ -10,49 +10,61 @@ import "./IOmniValidator.sol";
 contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
     using BytesLib for bytes;
 
-    address public immutable versaSingleton;
+    address public immutable versaOmniSingleton;
     address public immutable fallbackHandler;
-    uint256[2] public demoSupportedChainIds;
 
-    mapping(uint256 demoSupportedChainId => uint16 demoSupportedLzChainId) internal _chainIdsMap;
+    uint256[] internal _supportedChainIds;
+    mapping(uint256 supportedChainId => uint16 supportedLzChainId) internal _supportedLzChainIdsMap;
     mapping(address wallet => bytes32 salt) internal _walletSalts;
 
     constructor(
-        address _versaSingleton,
+        address _versaOmniSingleton,
         address _fallbackHandler,
         address _lzEndpoint,
-        uint256[2] memory _demoSupportedChainIds,
-        uint16[2] memory _demoSupportedLzChainIds
+        uint256[] memory supportedChainIds,
+        uint16[] memory supportedLzChainIds
     ) BaseOmniApp(_lzEndpoint) {
-        versaSingleton = _versaSingleton;
+        versaOmniSingleton = _versaOmniSingleton;
         fallbackHandler = _fallbackHandler;
 
-        demoSupportedChainIds = _demoSupportedChainIds;
-        for (uint i = 0; i < _demoSupportedChainIds.length; ++i) {
-            _chainIdsMap[_demoSupportedChainIds[i]] = _demoSupportedLzChainIds[i];
+        uint256 nativeChainId = getChainId();
+        for (uint i = 0; i < supportedChainIds.length; ++i) {
+            if (supportedChainIds[i] != nativeChainId) {
+                setTrustedRemoteAddress(supportedLzChainIds[i], abi.encodePacked(address(this)));
+            }
+            _supportedChainIds.push(supportedChainIds[i]);
+            _supportedLzChainIdsMap[supportedChainIds[i]] = supportedLzChainIds[i];
         }
+    }
 
-        _transferOwnership(address(this));
-        (, uint16[] memory remoteLzChainIds) = _getRemoteChainIds(getChainId());
-        for (uint i = 0; i < remoteLzChainIds.length; ++i) {
-            setTrustedRemoteAddress(remoteLzChainIds[i], abi.encode(address(this)));
-        }
-        _transferOwnership(msg.sender);
+    function getSupportedChainIds() external view returns (uint256[] memory supportedChainIds) {
+        supportedChainIds = _supportedChainIds;
+    }
+
+    function addSupportedChain(uint256 supportedChainId, uint16 supportedLzChainId) public onlyOwner {
+        require(
+            supportedChainId != 0 && _supportedLzChainIdsMap[supportedChainId] == 0,
+            "VersaOmniFactory: this chain has been added"
+        );
+        setTrustedRemoteAddress(supportedLzChainId, abi.encodePacked(address(this)));
+        _supportedChainIds.push(supportedChainId);
+        _supportedLzChainIdsMap[supportedChainId] = supportedLzChainId;
     }
 
     function getSpecificAddressWithNonce(
         address[] memory validators,
         OmniValidatorManager.ValidatorType[] memory validatorType,
         bytes[] memory validatorInitData,
+        uint256[] memory supportedChainIds,
+        uint16[] memory supportedLzChainIds,
         uint256 salt
     ) external view returns (address addr) {
-        (uint256[] memory remoteChainIds, uint16[] memory remoteLzChainIds) = _getRemoteChainIds(getChainId());
         bytes memory initializer = _getInitializer(
             validators,
             validatorType,
             validatorInitData,
-            remoteChainIds,
-            remoteLzChainIds
+            supportedChainIds,
+            supportedLzChainIds
         );
         bytes32 salt2 = _getSalt2(initializer, salt);
         addr = _getSpecificAddressWithNonce(salt2);
@@ -62,60 +74,55 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
         address[] memory validators,
         OmniValidatorManager.ValidatorType[] memory validatorType,
         bytes[] memory validatorInitData,
+        uint256[] memory supportedChainIds,
+        uint16[] memory supportedLzChainIds,
         uint256 salt
     ) external returns (address account) {
-        (uint256[] memory remoteChainIds, uint16[] memory remoteLzChainIds) = _getRemoteChainIds(getChainId());
         bytes memory initializer = _getInitializer(
             validators,
             validatorType,
             validatorInitData,
-            remoteChainIds,
-            remoteLzChainIds
+            supportedChainIds,
+            supportedLzChainIds
         );
         bytes32 salt2 = _getSalt2(initializer, salt);
         address addr = _getSpecificAddressWithNonce(salt2);
         require(addr.code.length == 0, "VersaOmniFactory: account already exists");
 
-        account = address(createChainSpecificProxyWithNonce(versaSingleton, initializer, salt));
+        account = address(createChainSpecificProxyWithNonce(versaOmniSingleton, initializer, salt));
         require(addr == account, "VersaOmniFactory: account address incorrect");
         _walletSalts[account] = salt2;
     }
 
-    function estimateRemoteCreateFee(address wallet, uint256 remoteChainId) public view returns (uint256 nativeFee) {
-        bytes memory payload = _getSyncPayload(wallet, remoteChainId);
-        nativeFee = estimateNativeFee(_chainIdsMap[remoteChainId], payload);
+    function estimateRemoteCreateFee(
+        address wallet,
+        uint16 remoteLzChainId,
+        uint256[] memory supportedChainIds,
+        uint16[] memory supportedLzChainIds
+    ) public view returns (uint256 nativeFee) {
+        bytes memory payload = _getSyncPayload(wallet, supportedChainIds, supportedLzChainIds);
+        nativeFee = estimateNativeFee(remoteLzChainId, payload);
     }
 
-    function createAccountOnRemoteChain(uint256 remoteChainId) external payable {
-        bytes memory payload = _getSyncPayload(msg.sender, remoteChainId);
-        _sendOmniMessage(_chainIdsMap[remoteChainId], payload, msg.value);
-    }
-
-    function _getRemoteChainIds(
-        uint256 chainId
-    ) internal view returns (uint256[] memory remoteChainIds, uint16[] memory remoteLzChainIds) {
-        uint dataLength = demoSupportedChainIds.length;
-        remoteChainIds = new uint256[](dataLength);
-        remoteLzChainIds = new uint16[](dataLength);
-        for (uint i = 0; i < dataLength; ++i) {
-            uint256 remoteChainId = demoSupportedChainIds[i];
-            if (remoteChainId != chainId) {
-                remoteChainIds[i] = remoteChainId;
-                remoteLzChainIds[i] = _chainIdsMap[remoteChainId];
-            }
-        }
+    function createAccountOnRemoteChain(
+        uint16 remoteLzChainId,
+        uint256[] memory supportedChainIds,
+        uint16[] memory supportedLzChainIds
+    ) external payable {
+        bytes memory payload = _getSyncPayload(msg.sender, supportedChainIds, supportedLzChainIds);
+        _sendOmniMessage(remoteLzChainId, payload, msg.value);
     }
 
     function _getInitializer(
         address[] memory validators,
         OmniValidatorManager.ValidatorType[] memory validatorType,
         bytes[] memory validatorInitData,
-        uint256[] memory remoteChainIds,
-        uint16[] memory remoteLzChainIds
+        uint256[] memory supportedChainIds,
+        uint16[] memory supportedLzChainIds
     ) internal view returns (bytes memory initializer) {
         initializer = abi.encodeCall(
             VersaOmniWallet.initialize,
-            (fallbackHandler, validators, validatorType, validatorInitData, remoteChainIds, remoteLzChainIds)
+            (fallbackHandler, validators, validatorType, validatorInitData, supportedChainIds, supportedLzChainIds)
         );
     }
 
@@ -124,7 +131,7 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
     }
 
     function _getSpecificAddressWithNonce(bytes32 salt2) internal view returns (address addr) {
-        bytes memory deploymentData = abi.encodePacked(proxyCreationCode(), uint256(uint160(versaSingleton)));
+        bytes memory deploymentData = abi.encodePacked(proxyCreationCode(), uint256(uint160(versaOmniSingleton)));
         addr = Create2.computeAddress(bytes32(salt2), keccak256(deploymentData), address(this));
     }
 
@@ -145,7 +152,11 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
         );
     }
 
-    function _getSyncPayload(address wallet, uint256 remoteChainId) internal view returns (bytes memory payload) {
+    function _getSyncPayload(
+        address wallet,
+        uint256[] memory supportedChainIds,
+        uint16[] memory supportedLzChainIds
+    ) internal view returns (bytes memory payload) {
         (address[] memory sudoArray, address[] memory normalArray) = _getValidatorArray(wallet);
         uint dataLength = sudoArray.length + normalArray.length;
         require(dataLength > 0, "VersaOmniFactory: dataLength can not be zero");
@@ -163,22 +174,18 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
         }
         if (normalArray.length > 0) {
             for (uint i = 0; i < normalArray.length; ++i) {
-                validators[i] = normalArray[i];
-                validatorType[i] = OmniValidatorManager.ValidatorType.Normal;
-                validatorInitData[i] = IOmniValidator(normalArray[i]).getSyncInitData(wallet);
+                validators[i + sudoArray.length] = normalArray[i];
+                validatorType[i + sudoArray.length] = OmniValidatorManager.ValidatorType.Normal;
+                validatorInitData[i + sudoArray.length] = IOmniValidator(normalArray[i]).getSyncInitData(wallet);
             }
         }
-
-        (uint256[] memory remoteChainIds, uint16[] memory remoteLzChainIds) = _getRemoteChainIds(
-            _chainIdsMap[remoteChainId]
-        );
 
         bytes memory initializer = _getInitializer(
             validators,
             validatorType,
             validatorInitData,
-            remoteChainIds,
-            remoteLzChainIds
+            supportedChainIds,
+            supportedLzChainIds
         );
 
         require(_walletSalts[wallet] != bytes32(0), "VersaOmniFactory: salt2 invalid");
@@ -196,12 +203,12 @@ contract VersaOmniFactory is SafeProxyFactory, BaseOmniApp {
         address remote = address(bytes20(_srcAddress.slice(0, 20)));
         require(remote == address(this), "VersaOmniFactory: factory address incorrect");
 
-        (address addr, bytes32 salt2, bytes memory initialer) = abi.decode(_payload, (address, bytes32, bytes));
+        (address addr, bytes32 salt2, bytes memory initializer) = abi.decode(_payload, (address, bytes32, bytes));
         require(addr.code.length == 0, "VersaOmniFactory: account already exists");
 
-        SafeProxy account = deployProxy(versaSingleton, initialer, salt2);
+        SafeProxy account = deployProxy(versaOmniSingleton, initializer, salt2);
         require(addr == address(account), "VersaOmniFactory: account address incorrect");
         _walletSalts[address(account)] = salt2;
-        emit ProxyCreation(account, versaSingleton);
+        emit ProxyCreation(account, versaOmniSingleton);
     }
 }

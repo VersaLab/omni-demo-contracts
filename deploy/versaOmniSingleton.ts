@@ -1,12 +1,15 @@
 import { ethers } from "hardhat";
-import * as deployer from "../helper/deployer";
-import mumbaiAddresses from "../addresses/polygonMumbai.json";
-import scrollTestnetAddresses from "../addresses/scrollTestnet.json";
+import * as deployer from "./helper/deployer";
+import polygonMumbaiAddresses from "./addresses/polygonMumbai.json";
+import scrollTestnetAddresses from "./addresses/scrollTestnet.json";
 import fs from "fs";
 
 async function deployWithAddresses(addresses: any) {
-    const multisigValidator = await deployer.deployMultisigValidator();
-    addresses.multisigValidator = multisigValidator.address;
+    const versaOmniSingleton = await deployer.deployVersaOmniSingleton({
+        entryPoint: addresses.entryPoint,
+        lzEndpoint: addresses.lzEndpoint,
+    });
+    addresses.versaOmniSingleton = versaOmniSingleton.address;
     return addresses;
 }
 
@@ -16,7 +19,7 @@ async function main() {
 
     switch (network?.chainId) {
         case 80001: {
-            const result = await deployWithAddresses(mumbaiAddresses);
+            const result = await deployWithAddresses(polygonMumbaiAddresses);
             console.log("writing changed address to output file 'deploy/addresses/polygonMumbai.json'");
             fs.writeFileSync("deploy/addresses/polygonMumbai.json", JSON.stringify(result, null, "\t"), "utf8");
             break;

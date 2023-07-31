@@ -86,43 +86,27 @@ export async function generateWalletInitCode2(options: {
     salt: number;
     sudoValidator: string;
     sudoValidatorInitData: string;
-    hooks?: string[];
-    hooksInitData?: string[];
-    modules?: string[];
-    moduleInitData?: string[];
+    supportedChainIds: number[];
+    supportedLzChainIds: number[];
 }) {
-    const {
-        versaFacotryAddr,
-        salt,
-        sudoValidator,
-        sudoValidatorInitData,
-        hooks = [],
-        hooksInitData = [],
-        modules = [],
-        moduleInitData = [],
-    } = options;
-    const versaFactory = await ethers.getContractAt("VersaOmniFactory", versaFacotryAddr);
-
-    let tx = await versaFactory.populateTransaction.createAccount(
+    const { versaFacotryAddr, salt, sudoValidator, sudoValidatorInitData } = options;
+    const versaOmniFactory = await ethers.getContractAt("VersaOmniFactory", versaFacotryAddr);
+    let tx = await versaOmniFactory.populateTransaction.createAccount(
         [sudoValidator],
-        [sudoValidatorInitData],
         [1],
-        hooks,
-        hooksInitData,
-        modules,
-        moduleInitData,
+        [sudoValidatorInitData],
+        [80001, 534353],
+        [10109, 10170],
         salt
     );
 
     let initCode = hexConcat([versaFacotryAddr, tx.data!]);
-    let walletAddress = await versaFactory.getSpecificAddressWithNonce(
+    let walletAddress = await versaOmniFactory.getSpecificAddressWithNonce(
         [sudoValidator],
-        [sudoValidatorInitData],
         [1],
-        hooks,
-        hooksInitData,
-        modules,
-        moduleInitData,
+        [sudoValidatorInitData],
+        [80001, 534353],
+        [10109, 10170],
         salt
     );
 

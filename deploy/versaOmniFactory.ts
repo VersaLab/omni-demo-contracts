@@ -1,15 +1,17 @@
 import { ethers } from "hardhat";
 import * as deployer from "./helper/deployer";
 import { VersaOmniFactoryData } from "./helper/deployer";
-import mumbaiAddresses from "./addresses/polygonMumbai.json";
+import polygonMumbaiAddresses from "./addresses/polygonMumbai.json";
 import scrollTestnetAddresses from "./addresses/scrollTestnet.json";
 import fs from "fs";
 
 async function deployWithAddresses(addresses: any) {
     const versaOmniFactoryData: VersaOmniFactoryData = {
-        versaSingleton: addresses.versaSingleton,
-        defaultFallbackHandler: addresses.compatibilityFallbackHandler,
+        versaOmniSingleton: addresses.versaOmniSingleton,
+        fallbackHandler: addresses.compatibilityFallbackHandler,
         lzEndpoint: addresses.lzEndpoint,
+        supportedChainIds: [80001, 534353],
+        supportedLzChainIds: [10109, 10170],
     };
     const versaOmniFactory = await deployer.deployVersaOmniFactory(versaOmniFactoryData);
     addresses.versaOmniFactory = versaOmniFactory.address;
@@ -22,7 +24,7 @@ async function main() {
 
     switch (network?.chainId) {
         case 80001: {
-            const result = await deployWithAddresses(mumbaiAddresses);
+            const result = await deployWithAddresses(polygonMumbaiAddresses);
             console.log("writing changed address to output file 'deploy/addresses/polygonMumbai.json'");
             fs.writeFileSync("deploy/addresses/polygonMumbai.json", JSON.stringify(result, null, "\t"), "utf8");
             break;
