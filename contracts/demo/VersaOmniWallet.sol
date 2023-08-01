@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import "@aa-template/contracts/interfaces/IAccount.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../interface/IValidator.sol";
 import "../common/Enum.sol";
 import "../common/Executor.sol";
@@ -23,7 +24,8 @@ contract VersaOmniWallet is
     FallbackManager,
     EntryPointManager,
     OmniValidatorManager,
-    BaseOmniApp
+    BaseOmniApp,
+    ReentrancyGuard
 {
     using BytesLib for bytes;
     using ExcessivelySafeCall for address;
@@ -40,23 +42,18 @@ contract VersaOmniWallet is
 
     event SyncExecuted(uint16 toChainId);
     event SyncReceived(uint16 fromChainId);
-    event Shit(bytes reason);
 
     uint256[] internal _supportedChainIds;
     mapping(uint256 supportedChainId => uint16 supportedLzChainId) internal _supportedLzChainIdsMap;
 
     string public constant VERSA_OMNI_VERSION = "1.0.0";
-
     bytes4 internal constant SUDO_SPECIFIC_EXECUTE = this.sudoSpecificExecute.selector;
     bytes4 internal constant SUDO_SYNC_EXECUTE = this.sudoSyncExecute.selector;
     bytes4 internal constant BATCH_SUDO_SPECIFIC_EXECUTE = this.batchSudoSpecificExecute.selector;
     bytes4 internal constant BATCH_SUDO_SYNC_EXECUTE = this.batchSudoSyncExecute.selector;
 
-    modifier onlyFromEntryPointOrLzEndpoint() {
-        require(
-            msg.sender == entryPoint() || msg.sender == address(lzEndpoint),
-            "VersaOmni: not from EntryPoint or LzEndpoint"
-        );
+    modifier onlyFromEntryPointOrSelf() {
+        require(msg.sender == entryPoint() || msg.sender == address(this), "VersaOmni: not from EntryPoint or Self");
         _;
     }
 
@@ -97,9 +94,12 @@ contract VersaOmniWallet is
         require(hasSudoValidator, "VersaOmni: must set up the initial sudo validator");
 
         _transferOwnership(msg.sender);
+        uint256 nativeChainId = getChainId();
         for (uint i = 0; i < supportedChainIds.length; ++i) {
             require(supportedChainIds[i] != 0, "VersaOmniFactory: chain id can not be zero");
-            setTrustedRemoteAddress(supportedLzChainIds[i], abi.encodePacked(address(this)));
+            if (supportedChainIds[i] != nativeChainId) {
+                setTrustedRemoteAddress(supportedLzChainIds[i], abi.encodePacked(address(this)));
+            }
             _supportedChainIds.push(supportedChainIds[i]);
             _supportedLzChainIdsMap[supportedChainIds[i]] = supportedLzChainIds[i];
         }
@@ -167,7 +167,7 @@ contract VersaOmniWallet is
         uint256 value,
         bytes memory data,
         Enum.Operation operation
-    ) external onlyFromEntryPointOrLzEndpoint {
+    ) external onlyFromEntryPointOrSelf nonReentrant {
         (uint16[] memory toLzChainIds, uint256[] memory nativeFees) = _checkBeforeSyncExecute();
         _internalExecute(to, value, data, operation, ExecutionType.Sudo);
         if (toLzChainIds.length != 0) {
@@ -187,7 +187,7 @@ contract VersaOmniWallet is
         uint256[] memory value,
         bytes[] memory data,
         Enum.Operation[] memory operation
-    ) external onlyFromEntryPointOrLzEndpoint {
+    ) external onlyFromEntryPointOrSelf nonReentrant {
         _checkBatchDataLength(to.length, value.length, data.length, operation.length);
         (uint16[] memory toLzChainIds, uint256[] memory nativeFees) = _checkBeforeSyncExecute();
         for (uint256 i = 0; i < to.length; ++i) {
@@ -203,12 +203,13 @@ contract VersaOmniWallet is
         view
         returns (uint16[] memory toLzChainIds, uint256[] memory nativeFees)
     {
-        if (msg.sender != address(lzEndpoint)) {
+        if (msg.sender != address(this)) {
             uint dataLength = _supportedChainIds.length;
             toLzChainIds = new uint16[](dataLength);
             nativeFees = new uint256[](dataLength);
-            uint256 totalNativeFee;
+
             uint256 nativeChainId = getChainId();
+            uint256 totalNativeFee;
             for (uint i = 0; i < dataLength; ++i) {
                 if (_supportedChainIds[i] != nativeChainId) {
                     toLzChainIds[i] = _supportedLzChainIdsMap[_supportedChainIds[i]];
@@ -249,13 +250,9 @@ contract VersaOmniWallet is
             "VersaOmni: sync receive selector doesn't match"
         );
 
-        // (bool success, ) = address(this).excessivelySafeCall(gasleft(), 0, _payload);
-        // require(success, "VersaOmni: sync receive failed");
-        (bool success, bytes memory reason) = address(this).excessivelySafeCall(gasleft(), 150, _payload);
-        if (!success) {
-            emit Shit(reason);
-        }
-        // emit SyncReceived(_srcChainId);
+        (bool success, ) = address(this).excessivelySafeCall(gasleft(), 0, _payload);
+        require(success, "VersaOmni: sync receive failed");
+        emit SyncReceived(_srcChainId);
     }
 
     /**

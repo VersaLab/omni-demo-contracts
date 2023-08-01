@@ -81,7 +81,7 @@ export async function generateWalletInitCode(options: {
     return { initCode, walletAddress };
 }
 
-export async function generateWalletInitCode2(options: {
+export async function generateOmniWalletInitCode(options: {
     versaFacotryAddr: string;
     salt: number;
     sudoValidator: string;

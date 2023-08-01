@@ -1,13 +1,17 @@
-import hre, { ethers } from "hardhat";
+import { ethers } from "hardhat";
 
-async function verify(address: string, constructorArguments: any) {
-    await hre
-        .run("verify:verify", {
-            // network: `${network?.name}`,
-            address,
-            constructorArguments,
-        })
-        .catch(console.log);
+export async function deployCompatibilityFallbackHandler() {
+    const CompatibilityFallbackHandler = await ethers.getContractFactory("CompatibilityFallbackHandler");
+    const compatibilityFallbackHandler = await CompatibilityFallbackHandler.deploy();
+    console.log("CompatibilityFallbackHandler deployed to: ", compatibilityFallbackHandler.address);
+    return compatibilityFallbackHandler;
+}
+
+export async function deployECDSAOmniValidator() {
+    const ECDSAOmniValidator = await ethers.getContractFactory("ECDSAOmniValidator");
+    const ecdsaOmniValidator = await ECDSAOmniValidator.deploy();
+    console.log("ECDSAOmniValidator deployed to: ", ecdsaOmniValidator.address);
+    return ecdsaOmniValidator;
 }
 
 export interface VersaOmniSingletonData {
@@ -21,13 +25,6 @@ export async function deployVersaOmniSingleton(data: VersaOmniSingletonData) {
     await versaOmniSingleton.deployed();
     console.log("VersaOmniSingleton deployed to:", versaOmniSingleton.address);
     return versaOmniSingleton;
-}
-
-export async function deployCompatibilityFallbackHandler() {
-    const CompatibilityFallbackHandler = await ethers.getContractFactory("CompatibilityFallbackHandler");
-    const compatibilityFallbackHandler = await CompatibilityFallbackHandler.deploy();
-    console.log("CompatibilityFallbackHandler deployed to: ", compatibilityFallbackHandler.address);
-    return compatibilityFallbackHandler;
 }
 
 export interface VersaOmniFactoryData {
@@ -51,11 +48,4 @@ export async function deployVersaOmniFactory(data: VersaOmniFactoryData) {
     await versaOmniFactory.deployed();
     console.log("VersaOmniFactory deployed to:", versaOmniFactory.address);
     return versaOmniFactory;
-}
-
-export async function deployECDSAOmniValidator() {
-    const ECDSAOmniValidator = await ethers.getContractFactory("ECDSAOmniValidator");
-    const ecdsaOmniValidator = await ECDSAOmniValidator.deploy();
-    console.log("ECDSAOmniValidator deployed to: ", ecdsaOmniValidator.address);
-    return ecdsaOmniValidator;
 }

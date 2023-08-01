@@ -4,7 +4,7 @@ import { parseEther } from "ethers/lib/utils";
 import lzChainIds from "./constants/lzChainIds.json";
 import polygonMumbaiAddresses from "../../deploy/addresses/polygonMumbai.json";
 import scrollTestnetAddresses from "../../deploy/addresses/scrollTestnet.json";
-import { generateWalletInitCode2 } from "../../test/utils";
+import { generateOmniWalletInitCode } from "../../test/utils";
 import { estimateGasAndSendUserOpAndGetReceipt, generateUserOp } from "../utils/bundler";
 import * as config from "../utils/config";
 
@@ -29,7 +29,12 @@ async function main() {
     const abiCoder = new ethers.utils.AbiCoder();
     const salt = config.salt;
     const validatorInitdata = abiCoder.encode(["address"], [addr]);
-    let bundlerURL, entryPointAddress, versaOmniFactoryAddress, ecdsaOmniValidatorAddress, dstChainId;
+    let bundlerURL,
+        entryPointAddress,
+        versaOmniFactoryAddress,
+        ecdsaOmniValidatorAddress,
+        dstChainId,
+        versaOmniWalletAddress;
     switch (chainId) {
         case 80001: {
             bundlerURL = config.mumbaiBundlerURL;
@@ -37,6 +42,7 @@ async function main() {
             versaOmniFactoryAddress = polygonMumbaiAddresses.versaOmniFactory;
             ecdsaOmniValidatorAddress = polygonMumbaiAddresses.ecdsaOmniValidator;
             dstChainId = lzChainIds["scroll-testnet"];
+            versaOmniWalletAddress = polygonMumbaiAddresses.versaOmniWallet;
             break;
         }
         case 534353: {
@@ -45,30 +51,24 @@ async function main() {
             versaOmniFactoryAddress = scrollTestnetAddresses.versaOmniFactory;
             ecdsaOmniValidatorAddress = scrollTestnetAddresses.ecdsaOmniValidator;
             dstChainId = lzChainIds["polygon-mumbai"];
+            versaOmniWalletAddress = scrollTestnetAddresses.versaOmniWallet;
             break;
         }
         default: {
             console.log("unsupported network");
         }
     }
-    let { initCode, walletAddress } = await generateWalletInitCode2({
-        versaFacotryAddr: versaOmniFactoryAddress,
-        salt: salt,
-        sudoValidator: ecdsaOmniValidatorAddress,
-        sudoValidatorInitData: validatorInitdata,
-    });
-    console.log(walletAddress);
     const versaOmniFactory = await ethers.getContractAt("VersaOmniFactory", versaOmniFactoryAddress);
     let fee = await versaOmniFactory.estimateRemoteCreateFee(
-        walletAddress,
+        versaOmniWalletAddress,
         dstChainId,
         [80001, 534353],
         [10109, 10170]
     );
-    fee = fee.add(parseEther("0.0001"));
+    // fee = fee.add(parseEther("0.0001"));
     console.log(`(wei): ${fee} / (eth): ${ethers.utils.formatEther(fee)}`);
     await waitForEnter();
-    const wallet = await ethers.getContractAt("VersaOmniWallet", walletAddress);
+    const wallet = await ethers.getContractAt("VersaOmniWallet", versaOmniWalletAddress);
     const data = versaOmniFactory.interface.encodeFunctionData("createAccountOnRemoteChain", [
         dstChainId,
         [80001, 534353],
@@ -80,7 +80,7 @@ async function main() {
         data,
         0,
     ]);
-    const userOp = await generateUserOp({ signer: signer, walletAddress, callData });
+    const userOp = await generateUserOp({ signer: signer, walletAddress: versaOmniWalletAddress, callData });
     await estimateGasAndSendUserOpAndGetReceipt({
         bundlerURL,
         userOp,

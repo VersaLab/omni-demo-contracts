@@ -24,13 +24,14 @@ function waitForEnter() {
 async function main() {
     const [signer1, signer2] = await ethers.getSigners();
     const chainId = await signer1.getChainId();
-    let bundlerURL, entryPointAddress, ecdsaOmniValidatorAddress, dstChainId;
+    let bundlerURL, entryPointAddress, ecdsaOmniValidatorAddress, dstChainId, versaOmniWalletAddress;
     switch (chainId) {
         case 80001: {
             bundlerURL = config.mumbaiBundlerURL;
             entryPointAddress = polygonMumbaiAddresses.entryPoint;
             ecdsaOmniValidatorAddress = polygonMumbaiAddresses.ecdsaOmniValidator;
             dstChainId = lzChainIds["scroll-testnet"];
+            versaOmniWalletAddress = polygonMumbaiAddresses.versaOmniWallet;
             break;
         }
         case 534353: {
@@ -38,15 +39,15 @@ async function main() {
             entryPointAddress = scrollTestnetAddresses.entryPoint;
             ecdsaOmniValidatorAddress = scrollTestnetAddresses.ecdsaOmniValidator;
             dstChainId = lzChainIds["polygon-mumbai"];
+            versaOmniWalletAddress = scrollTestnetAddresses.versaOmniWallet;
             break;
         }
         default: {
             console.log("unsupported network");
         }
     }
-    const walletAddress = "0xda14c2758463559550ea6fb3322bc50f5e4c7fed";
     const ecdsaValidator = await ethers.getContractAt("ECDSAOmniValidator", ecdsaOmniValidatorAddress);
-    const wallet = await ethers.getContractAt("VersaOmniWallet", walletAddress);
+    const wallet = await ethers.getContractAt("VersaOmniWallet", versaOmniWalletAddress);
     const data = ecdsaValidator.interface.encodeFunctionData("setSigner", [await signer2.getAddress()]);
     const callData = wallet.interface.encodeFunctionData("batchSudoSyncExecute", [
         [ecdsaOmniValidatorAddress],
@@ -54,8 +55,7 @@ async function main() {
         [data],
         [0],
     ]);
-    console.log(callData);
-    const userOp = await generateUserOp({ signer: signer1, walletAddress, callData });
+    const userOp = await generateUserOp({ signer: signer1, walletAddress: versaOmniWalletAddress, callData });
     await estimateGasAndSendUserOpAndGetReceipt({
         bundlerURL,
         userOp,

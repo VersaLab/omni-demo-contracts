@@ -11,7 +11,7 @@ const abiCoder = new AbiCoder();
 const fakePaymasterAndData =
     "0xd394abc2d89da13bc1ae3065136ed0311cfd0dff8478643d27dbe81d199f74f654e4b0e41d867de301000064a5048e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000aaf28079a75fe3bac32199b0c355bad9bdd4c3710b95b8d93a40e8fa09fe420915a2a5ca95db566daa111b729b58540bf526597e1d47a95376e12b4cf52d3ca98a8541b";
 const fakeSignature =
-    "0x59c044382c5418739ef913865b05f60050f8e587041548215aa595816dfbe77b26408ebd368bc51be61008aaef7b9b87479c91f9c297caf1e33e8c3b2de69a3b1c";
+    "0x9ee58f039c38a24c3542a7ba250b916c9f587b25003c9bd61dfa6a48851e6263d3f83d52eb8654b604659c40930f8ee4c9524776b617341ce22a01efb53ff509e2dd0960ea5cdbf714e066a61747261a7e23f386a81c";
 
 export function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -25,7 +25,7 @@ export async function generateUserOp(options: {
 }) {
     const { signer, walletAddress, callData } = options;
     let initCode = options.initCode != undefined ? options.initCode : "0x";
-    const wallet = await ethers.getContractAt("VersaWallet", walletAddress);
+    const wallet = await ethers.getContractAt("VersaOmniWallet", walletAddress);
     console.log("wallet address:", wallet.address);
     let code;
     if (signer.provider != undefined) {
@@ -43,9 +43,9 @@ export async function generateUserOp(options: {
         nonce: hexlify(nonce),
         initCode,
         callData,
-        callGasLimit: hexlify(2000000),
-        verificationGasLimit: hexlify(2000000),
-        preVerificationGas: hexlify(2000000),
+        callGasLimit: hexlify(1000000),
+        verificationGasLimit: hexlify(1000000),
+        preVerificationGas: hexlify(1000000),
         maxFeePerGas: gasPrice.toHexString(),
         maxPriorityFeePerGas: gasPrice.toHexString(),
         paymasterAndData: "0x",
@@ -157,7 +157,7 @@ export async function estimateGasAndSendUserOpAndGetReceipt(options: {
             case 534353: {
                 tx = await signer.sendTransaction({
                     to: userOp.sender,
-                    value: parseEther("0.002"),
+                    value: parseEther("0.003"),
                 });
                 break;
             }
