@@ -15,6 +15,9 @@ contract ECDSAOmniValidator is BaseOmniValidator {
 
     mapping(address => address) private _signers;
 
+    //only for demo test
+    mapping(address => address) private _demoTempMap;
+
     /**
      * @dev Sets a new signer for the calling wallet.
      * @param newSigner The address of the new signer.
@@ -30,6 +33,10 @@ contract ECDSAOmniValidator is BaseOmniValidator {
      */
     function getSigner(address wallet) external view returns (address) {
         return _signers[wallet];
+    }
+
+    function getWallet(address signer) external view returns (address) {
+        return _demoTempMap[signer];
     }
 
     /**
@@ -106,6 +113,12 @@ contract ECDSAOmniValidator is BaseOmniValidator {
         require(newSigner != address(0), "ECDSAOmniValidator: invalid signer address");
         address oldSigner = _signers[wallet];
         _signers[wallet] = newSigner;
+
+        //demo temp
+        if (oldSigner != address(0)) {
+            _demoTempMap[oldSigner] = address(0);
+        }
+        _demoTempMap[newSigner] = wallet;
         emit SetSigner(wallet, oldSigner, newSigner);
     }
 
@@ -150,10 +163,36 @@ contract ECDSAOmniValidator is BaseOmniValidator {
         uint256 validAfter
     ) internal pure returns (uint256) {
         uint256 sigFailed;
-        bytes32 messageHash = hash.toEthSignedMessageHash();
+        bytes32 messageHash = _toEthSignedMessageHash(_bytes32ToHexBytes(hash));
         if (signer != messageHash.recover(signature)) {
             sigFailed = SIG_VALIDATION_FAILED;
         }
         return _packValidationData(sigFailed, validUntil, validAfter);
+    }
+
+    function _toEthSignedMessageHash(bytes memory hash) internal pure returns (bytes32 messageHash) {
+        messageHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n", Strings.toString(hash.length), hash)
+        );
+    }
+
+    function _bytes32ToHexBytes(bytes32 data) internal pure returns (bytes memory) {
+        bytes memory hexBytes = new bytes(64);
+        for (uint i = 0; i < 32; i++) {
+            uint8 value = uint8(data[i]);
+            uint8 highNibble = value >> 4;
+            uint8 lowNibble = value & 0x0f;
+            hexBytes[i * 2] = _uint8ToBytes1(highNibble);
+            hexBytes[i * 2 + 1] = _uint8ToBytes1(lowNibble);
+        }
+        return hexBytes;
+    }
+
+    function _uint8ToBytes1(uint8 value) internal pure returns (bytes1) {
+        if (value < 10) {
+            return bytes1(uint8(bytes("0")[0]) + value);
+        } else {
+            return bytes1(uint8(bytes("a")[0]) + value - 10);
+        }
     }
 }

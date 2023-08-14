@@ -3,7 +3,7 @@ import * as readline from "readline";
 import { parseEther } from "ethers/lib/utils";
 import lzChainIds from "./constants/lzChainIds.json";
 import polygonMumbaiAddresses from "../../deploy/addresses/polygonMumbai.json";
-import scrollTestnetAddresses from "../../deploy/addresses/scrollTestnet.json";
+import scrollAlphaAddresses from "../../deploy/addresses/scrollAlpha.json";
 import { generateOmniWalletInitCode } from "../../test/utils";
 import { estimateGasAndSendUserOpAndGetReceipt, generateUserOp } from "../utils/bundler";
 import * as config from "../utils/config";
@@ -46,12 +46,12 @@ async function main() {
             break;
         }
         case 534353: {
-            bundlerURL = config.scrollTestnetBundlerURL;
-            entryPointAddress = scrollTestnetAddresses.entryPoint;
-            versaOmniFactoryAddress = scrollTestnetAddresses.versaOmniFactory;
-            ecdsaOmniValidatorAddress = scrollTestnetAddresses.ecdsaOmniValidator;
+            bundlerURL = config.scrollAlphaBundlerURL;
+            entryPointAddress = scrollAlphaAddresses.entryPoint;
+            versaOmniFactoryAddress = scrollAlphaAddresses.versaOmniFactory;
+            ecdsaOmniValidatorAddress = scrollAlphaAddresses.ecdsaOmniValidator;
             dstChainId = lzChainIds["polygon-mumbai"];
-            versaOmniWalletAddress = scrollTestnetAddresses.versaOmniWallet;
+            versaOmniWalletAddress = scrollAlphaAddresses.versaOmniWallet;
             break;
         }
         default: {
@@ -65,7 +65,7 @@ async function main() {
         [80001, 534353],
         [10109, 10170]
     );
-    // fee = fee.add(parseEther("0.0001"));
+    fee = fee.add(parseEther("0.0001"));
     console.log(`(wei): ${fee} / (eth): ${ethers.utils.formatEther(fee)}`);
     await waitForEnter();
     const wallet = await ethers.getContractAt("VersaOmniWallet", versaOmniWalletAddress);

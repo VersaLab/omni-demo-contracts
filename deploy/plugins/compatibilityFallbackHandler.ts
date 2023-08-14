@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import * as deployer from "../helper/deployer";
 import polygonMumbaiAddresses from "../addresses/polygonMumbai.json";
-import scrollTestnetAddresses from "../addresses/scrollTestnet.json";
+import scrollAlphaAddresses from "../addresses/scrollAlpha.json";
 import fs from "fs";
 
 async function deployWithAddresses(addresses: any) {
@@ -22,9 +22,9 @@ async function main() {
             break;
         }
         case 534353: {
-            const result = await deployWithAddresses(scrollTestnetAddresses);
-            console.log("writing changed address to output file 'deploy/addresses/scrollTestnet.json'");
-            fs.writeFileSync("deploy/addresses/scrollTestnet.json", JSON.stringify(result, null, "\t"), "utf8");
+            const result = await deployWithAddresses(scrollAlphaAddresses);
+            console.log("writing changed address to output file 'deploy/addresses/scrollAlpha.json'");
+            fs.writeFileSync("deploy/addresses/scrollAlpha.json", JSON.stringify(result, null, "\t"), "utf8");
             break;
         }
         default: {

@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
 import { hexlify, hexConcat, arrayify, parseEther, parseUnits } from "ethers/lib/utils";
 import mumbaiAddresses from "../deploy/addresses/polygonMumbai.json";
-import scrollTestnetAddresses from "../deploy/addresses/scrollTestnet.json";
+import scrollAlphaAddresses from "../deploy/addresses/scrollAlpha.json";
 import { generateWalletInitCode } from "../test/utils";
 import { AddressOne } from "../@safe-contracts/src";
 import { estimateGasAndSendUserOpAndGetReceipt, generateUserOp, sleep } from "./utils/bundler";
@@ -19,16 +19,16 @@ import * as config from "./utils/config";
 // const targetERC20 = config.mumbaiUSDTAddress;
 // const testNFTAddress = config.mumbaiTestNFTAddress;
 
-const bundlerURL = config.scrollTestnetBundlerURL;
-const paymasterURL = config.scrollTestnetPaymasterURL;
-const entryPointAddress = scrollTestnetAddresses.entryPoint;
-const paymasterAddress = config.scrollTestnetPaymasterAddress;
-const versaAccountFactoryAddress = scrollTestnetAddresses.versaAccountFactory;
-const spendingLimitAddress = scrollTestnetAddresses.spendingLimitHooks;
-const ecdsaValidator = scrollTestnetAddresses.ecdsaValidator;
-const multisigValidator = scrollTestnetAddresses.multisigValidator;
-const targetERC20 = config.scrollTestnetUSDTAddress;
-const testNFTAddress = config.scrollTestnetTestNFTAddress;
+const bundlerURL = config.scrollAlphaBundlerURL;
+const paymasterURL = config.scrollAlphaPaymasterURL;
+const entryPointAddress = scrollAlphaAddresses.entryPoint;
+const paymasterAddress = config.scrollAlphaPaymasterAddress;
+const versaAccountFactoryAddress = scrollAlphaAddresses.versaAccountFactory;
+const spendingLimitAddress = scrollAlphaAddresses.spendingLimitHooks;
+const ecdsaValidator = scrollAlphaAddresses.ecdsaValidator;
+const multisigValidator = scrollAlphaAddresses.multisigValidator;
+const targetERC20 = config.scrollAlphaUSDTAddress;
+const testNFTAddress = config.scrollAlphaTestNFTAddress;
 
 const salt = config.salt;
 

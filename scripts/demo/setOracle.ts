@@ -1,7 +1,7 @@
 import hre, { ethers } from "hardhat";
 import lzChainIds from "./constants/lzChainIds.json";
 import polygonMumbaiAddresses from "../../deploy/addresses/polygonMumbai.json";
-import scrollTestnetAddresses from "../../deploy/addresses/scrollTestnet.json";
+import scrollAlphaAddresses from "../../deploy/addresses/scrollAlpha.json";
 
 async function main() {
     let [signer] = await ethers.getSigners();
@@ -16,7 +16,7 @@ async function main() {
             break;
         }
         case 534353: {
-            contractAddress = scrollTestnetAddresses["versaOmniFactory"];
+            contractAddress = scrollAlphaAddresses["versaOmniFactory"];
             dstChainId = lzChainIds["polygon-mumbai"];
             sendOracle = "0x3aCAAf60502791D199a5a5F0B173D78229eBFe32";
             receiveOracle = "0x3aCAAf60502791D199a5a5F0B173D78229eBFe32";

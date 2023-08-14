@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { parseEther } from "ethers/lib/utils";
 import fs from "fs";
 import polygonMumbaiAddresses from "../../deploy/addresses/polygonMumbai.json";
-import scrollTestnetAddresses from "../../deploy/addresses/scrollTestnet.json";
+import scrollAlphaAddresses from "../../deploy/addresses/scrollAlpha.json";
 import { generateOmniWalletInitCode } from "../../test/utils";
 import { estimateGasAndSendUserOpAndGetReceipt, generateUserOp } from "../utils/bundler";
 import * as config from "../utils/config";
@@ -25,11 +25,11 @@ async function main() {
             break;
         }
         case 534353: {
-            bundlerURL = config.scrollTestnetBundlerURL;
-            entryPointAddress = scrollTestnetAddresses.entryPoint;
-            versaOmniFactoryAddress = scrollTestnetAddresses.versaOmniFactory;
-            ecdsaOmniValidatorAddress = scrollTestnetAddresses.ecdsaOmniValidator;
-            versaOmniWalletAddress = scrollTestnetAddresses.versaOmniWallet;
+            bundlerURL = config.scrollAlphaBundlerURL;
+            entryPointAddress = scrollAlphaAddresses.entryPoint;
+            versaOmniFactoryAddress = scrollAlphaAddresses.versaOmniFactory;
+            ecdsaOmniValidatorAddress = scrollAlphaAddresses.ecdsaOmniValidator;
+            versaOmniWalletAddress = scrollAlphaAddresses.versaOmniWallet;
             break;
         }
         default: {
@@ -47,9 +47,9 @@ async function main() {
         sudoValidatorInitData: validatorInitdata,
     });
     polygonMumbaiAddresses.versaOmniWallet = walletAddress;
-    scrollTestnetAddresses.versaOmniWallet = walletAddress;
+    scrollAlphaAddresses.versaOmniWallet = walletAddress;
     fs.writeFileSync("deploy/addresses/polygonMumbai.json", JSON.stringify(polygonMumbaiAddresses, null, "\t"), "utf8");
-    fs.writeFileSync("deploy/addresses/scrollTestnet.json", JSON.stringify(scrollTestnetAddresses, null, "\t"), "utf8");
+    fs.writeFileSync("deploy/addresses/scrollAlpha.json", JSON.stringify(scrollAlphaAddresses, null, "\t"), "utf8");
 
     const wallet = await ethers.getContractAt("VersaOmniWallet", walletAddress);
     const callData = wallet.interface.encodeFunctionData("normalExecute", [

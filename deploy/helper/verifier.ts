@@ -1,6 +1,6 @@
 import hre from "hardhat";
 import polygonMumbaiAddresses from "../addresses/polygonMumbai.json";
-import scrollTestnetAddresses from "../addresses/scrollTestnet.json";
+import scrollAlphaAddresses from "../addresses/scrollAlpha.json";
 
 async function verify(address: string, constructorArguments?: any) {
     await hre.run("verify:verify", {

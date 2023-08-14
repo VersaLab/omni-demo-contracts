@@ -3,7 +3,7 @@ import * as readline from "readline";
 import { parseEther } from "ethers/lib/utils";
 import lzChainIds from "./constants/lzChainIds.json";
 import polygonMumbaiAddresses from "../../deploy/addresses/polygonMumbai.json";
-import scrollTestnetAddresses from "../../deploy/addresses/scrollTestnet.json";
+import scrollAlphaAddresses from "../../deploy/addresses/scrollAlpha.json";
 import { estimateGasAndSendUserOpAndGetReceipt, generateUserOp } from "../utils/bundler";
 import * as config from "../utils/config";
 
@@ -35,11 +35,11 @@ async function main() {
             break;
         }
         case 534353: {
-            bundlerURL = config.scrollTestnetBundlerURL;
-            entryPointAddress = scrollTestnetAddresses.entryPoint;
-            ecdsaOmniValidatorAddress = scrollTestnetAddresses.ecdsaOmniValidator;
+            bundlerURL = config.scrollAlphaBundlerURL;
+            entryPointAddress = scrollAlphaAddresses.entryPoint;
+            ecdsaOmniValidatorAddress = scrollAlphaAddresses.ecdsaOmniValidator;
             dstChainId = lzChainIds["polygon-mumbai"];
-            versaOmniWalletAddress = scrollTestnetAddresses.versaOmniWallet;
+            versaOmniWalletAddress = scrollAlphaAddresses.versaOmniWallet;
             break;
         }
         default: {

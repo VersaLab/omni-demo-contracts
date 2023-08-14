@@ -45,7 +45,7 @@ const config: HardhatUserConfig = {
                 `${DEPLOYER_PRIVATE_KEY_4}`,
             ],
         },
-        scrollTestnet: {
+        scrollAlpha: {
             url: `${SCROLL_TESTNET_RPC}`,
             accounts: [
                 `${DEPLOYER_PRIVATE_KEY_1}`,
