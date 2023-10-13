@@ -176,7 +176,7 @@ export async function estimateGasAndSendUserOpAndGetReceipt(options: {
     //     return error;
     // }
     userOp.callGasLimit = hexlify(gas.callGasLimit);
-    userOp.verificationGasLimit = hexlify(gas.verificationGas);
+    userOp.verificationGasLimit = hexlify(gas.verificationGas + 100000);
     userOp.preVerificationGas = hexlify(gas.preVerificationGas);
     console.log("through paymaster?", paymasterURL !== "");
     if (paymasterURL !== "") {

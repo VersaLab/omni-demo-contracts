@@ -10,7 +10,7 @@ async function main() {
     switch (chainId) {
         case 80001: {
             contractAddress = polygonMumbaiAddresses["versaOmniFactory"];
-            dstChainId = lzChainIds["scroll-testnet"];
+            dstChainId = lzChainIds["scroll-alpha"];
             sendOracle = "0xAeC5E56217a963BDe38a3b6e0C3Cb5E864450C86";
             receiveOracle = "0xAeC5E56217a963BDe38a3b6e0C3Cb5E864450C86";
             break;

@@ -10,7 +10,7 @@ async function main() {
     switch (chainId) {
         case 80001: {
             contractAddress = polygonMumbaiAddresses["versaOmniFactory"];
-            dstChainId = lzChainIds["scroll-testnet"];
+            dstChainId = lzChainIds["scroll-alpha"];
             break;
         }
         case 534353: {

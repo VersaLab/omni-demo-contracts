@@ -30,7 +30,7 @@ async function main() {
             bundlerURL = config.mumbaiBundlerURL;
             entryPointAddress = polygonMumbaiAddresses.entryPoint;
             ecdsaOmniValidatorAddress = polygonMumbaiAddresses.ecdsaOmniValidator;
-            dstChainId = lzChainIds["scroll-testnet"];
+            dstChainId = lzChainIds["scroll-alpha"];
             versaOmniWalletAddress = polygonMumbaiAddresses.versaOmniWallet;
             break;
         }

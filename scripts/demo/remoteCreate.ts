@@ -41,7 +41,7 @@ async function main() {
             entryPointAddress = polygonMumbaiAddresses.entryPoint;
             versaOmniFactoryAddress = polygonMumbaiAddresses.versaOmniFactory;
             ecdsaOmniValidatorAddress = polygonMumbaiAddresses.ecdsaOmniValidator;
-            dstChainId = lzChainIds["scroll-testnet"];
+            dstChainId = lzChainIds["scroll-alpha"];
             versaOmniWalletAddress = polygonMumbaiAddresses.versaOmniWallet;
             break;
         }

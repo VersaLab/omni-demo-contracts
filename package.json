@@ -1,15 +1,12 @@
 {
   "name": "versa-omni-demo-contracts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "compile": "hardhat compile",
-    "test": "hardhat test",
-    "test-report": "hardhat coverage --testfiles test/**/*.test.ts",
     "prettier": "npx prettier --write .",
     "style-check": "npx prettier --check .",
     "solhint": "npx solhint -f table contracts/*.sol contracts/**/*.sol contracts/**/**/*.sol",
-    "lint": "yarn style-check & yarn solhint",
-    "coverage": "hardhat clean & hardhat coverage"
+    "lint": "yarn style-check & yarn solhint"
   },
   "husky": {
     "hooks": {
