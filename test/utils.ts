@@ -95,8 +95,8 @@ export async function generateOmniWalletInitCode(options: {
         [sudoValidator],
         [1],
         [sudoValidatorInitData],
-        [80001, 534353],
-        [10109, 10170],
+        [80001, 534351],
+        [10109, 10214],
         salt
     );
 
@@ -105,8 +105,8 @@ export async function generateOmniWalletInitCode(options: {
         [sudoValidator],
         [1],
         [sudoValidatorInitData],
-        [80001, 534353],
-        [10109, 10170],
+        [80001, 534351],
+        [10109, 10214],
         salt
     );
 

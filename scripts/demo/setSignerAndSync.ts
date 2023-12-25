@@ -3,7 +3,7 @@ import * as readline from "readline";
 import { parseEther } from "ethers/lib/utils";
 import lzChainIds from "./constants/lzChainIds.json";
 import polygonMumbaiAddresses from "../../deploy/addresses/polygonMumbai.json";
-import scrollAlphaAddresses from "../../deploy/addresses/scrollAlpha.json";
+import scrollSepoliaAddresses from "../../deploy/addresses/scrollSepolia.json";
 import { estimateGasAndSendUserOpAndGetReceipt, generateUserOp } from "../utils/bundler";
 import * as config from "../utils/config";
 
@@ -30,16 +30,16 @@ async function main() {
             bundlerURL = config.mumbaiBundlerURL;
             entryPointAddress = polygonMumbaiAddresses.entryPoint;
             ecdsaOmniValidatorAddress = polygonMumbaiAddresses.ecdsaOmniValidator;
-            dstChainId = lzChainIds["scroll-alpha"];
+            dstChainId = lzChainIds["scroll-sepolia"];
             versaOmniWalletAddress = polygonMumbaiAddresses.versaOmniWallet;
             break;
         }
-        case 534353: {
-            bundlerURL = config.scrollAlphaBundlerURL;
-            entryPointAddress = scrollAlphaAddresses.entryPoint;
-            ecdsaOmniValidatorAddress = scrollAlphaAddresses.ecdsaOmniValidator;
+        case 534351: {
+            bundlerURL = config.scrollSepoliaBundlerURL;
+            entryPointAddress = scrollSepoliaAddresses.entryPoint;
+            ecdsaOmniValidatorAddress = scrollSepoliaAddresses.ecdsaOmniValidator;
             dstChainId = lzChainIds["polygon-mumbai"];
-            versaOmniWalletAddress = scrollAlphaAddresses.versaOmniWallet;
+            versaOmniWalletAddress = scrollSepoliaAddresses.versaOmniWallet;
             break;
         }
         default: {

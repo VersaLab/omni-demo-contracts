@@ -154,7 +154,7 @@ export async function estimateGasAndSendUserOpAndGetReceipt(options: {
                 });
                 break;
             }
-            case 534353: {
+            case 534351: {
                 tx = await signer.sendTransaction({
                     to: userOp.sender,
                     value: parseEther("0.003"),

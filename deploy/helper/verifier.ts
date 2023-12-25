@@ -1,6 +1,6 @@
 import hre from "hardhat";
 import polygonMumbaiAddresses from "../addresses/polygonMumbai.json";
-import scrollAlphaAddresses from "../addresses/scrollAlpha.json";
+import scrollSepoliaAddresses from "../addresses/scrollSepolia.json";
 
 async function verify(address: string, constructorArguments?: any) {
     await hre.run("verify:verify", {
@@ -25,13 +25,25 @@ async function main() {
                 polygonMumbaiAddresses.versaOmniSingleton,
                 polygonMumbaiAddresses.compatibilityFallbackHandler,
                 polygonMumbaiAddresses.lzEndpoint,
-                [80001, 534353],
-                [10109, 10170],
+                [80001, 534351],
+                [10109, 10214],
             ]);
             break;
         }
-        case 534353: {
-            console.log("unsupported network");
+        case 534351: {
+            await verify(scrollSepoliaAddresses.compatibilityFallbackHandler);
+            await verify(scrollSepoliaAddresses.ecdsaOmniValidator);
+            await verify(scrollSepoliaAddresses.versaOmniSingleton, [
+                scrollSepoliaAddresses.entryPoint,
+                scrollSepoliaAddresses.lzEndpoint,
+            ]);
+            await verify(scrollSepoliaAddresses.versaOmniFactory, [
+                scrollSepoliaAddresses.versaOmniSingleton,
+                scrollSepoliaAddresses.compatibilityFallbackHandler,
+                scrollSepoliaAddresses.lzEndpoint,
+                [80001, 534351],
+                [10109, 10214],
+            ]);
             break;
         }
         default: {

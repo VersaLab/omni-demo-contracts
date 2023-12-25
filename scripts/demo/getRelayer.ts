@@ -1,7 +1,7 @@
 import hre, { ethers } from "hardhat";
 import lzChainIds from "./constants/lzChainIds.json";
 import polygonMumbaiAddresses from "../../deploy/addresses/polygonMumbai.json";
-import scrollAlphaAddresses from "../../deploy/addresses/scrollAlpha.json";
+import scrollSepoliaAddresses from "../../deploy/addresses/scrollSepolia.json";
 
 async function main() {
     let [signer] = await ethers.getSigners();
@@ -10,11 +10,11 @@ async function main() {
     switch (chainId) {
         case 80001: {
             contractAddress = polygonMumbaiAddresses["versaOmniFactory"];
-            dstChainId = lzChainIds["scroll-alpha"];
+            dstChainId = lzChainIds["scroll-sepolia"];
             break;
         }
-        case 534353: {
-            contractAddress = scrollAlphaAddresses["versaOmniFactory"];
+        case 534351: {
+            contractAddress = scrollSepoliaAddresses["versaOmniFactory"];
             dstChainId = lzChainIds["polygon-mumbai"];
             break;
         }

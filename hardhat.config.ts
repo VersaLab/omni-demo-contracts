@@ -4,22 +4,15 @@ import "solidity-coverage";
 import "dotenv/config";
 
 const POLYGON_MUMBAI_RPC = process.env.POLYGON_MUMBAI_RPC || "https://polygon-testnet.public.blastapi.io";
-
-const SCROLL_ALPHA_RPC = process.env.SCROLL_ALPHA_RPC || "https://scroll-alphanet.public.blastapi.io";
+const SCROLL_SEPOLIA_RPC = process.env.SCROLL_SEPOLIA_RPC || "https://scroll-sepolia.public.blastapi.io";
 
 const DEPLOYER_PRIVATE_KEY_1 =
     process.env.DEPLOYER_PRIVATE_KEY_1 || "0000000000000000000000000000000000000000000000000000000000000001";
-
 const DEPLOYER_PRIVATE_KEY_2 =
     process.env.DEPLOYER_PRIVATE_KEY_2 || "0000000000000000000000000000000000000000000000000000000000000002";
 
-const DEPLOYER_PRIVATE_KEY_3 =
-    process.env.DEPLOYER_PRIVATE_KEY_3 || "0000000000000000000000000000000000000000000000000000000000000003";
-
-const DEPLOYER_PRIVATE_KEY_4 =
-    process.env.DEPLOYER_PRIVATE_KEY_4 || "0000000000000000000000000000000000000000000000000000000000000004";
-
 const POLYGON_MUMBAI_SCAN_KEY = process.env.POLYGON_MUMBAI_SCAN_KEY;
+const SCROLL_SEPOLIA_SCAN_KEY = process.env.SCROLL_SEPOLIA_SCAN_KEY;
 
 const config: HardhatUserConfig = {
     solidity: {
@@ -38,27 +31,28 @@ const config: HardhatUserConfig = {
     networks: {
         polygonMumbai: {
             url: `${POLYGON_MUMBAI_RPC}`,
-            accounts: [
-                `${DEPLOYER_PRIVATE_KEY_1}`,
-                `${DEPLOYER_PRIVATE_KEY_2}`,
-                `${DEPLOYER_PRIVATE_KEY_3}`,
-                `${DEPLOYER_PRIVATE_KEY_4}`,
-            ],
+            accounts: [`${DEPLOYER_PRIVATE_KEY_1}`, `${DEPLOYER_PRIVATE_KEY_2}`],
         },
-        scrollAlpha: {
-            url: `${SCROLL_ALPHA_RPC}`,
-            accounts: [
-                `${DEPLOYER_PRIVATE_KEY_1}`,
-                `${DEPLOYER_PRIVATE_KEY_2}`,
-                `${DEPLOYER_PRIVATE_KEY_3}`,
-                `${DEPLOYER_PRIVATE_KEY_4}`,
-            ],
+        scrollSepolia: {
+            url: `${SCROLL_SEPOLIA_RPC}`,
+            accounts: [`${DEPLOYER_PRIVATE_KEY_1}`, `${DEPLOYER_PRIVATE_KEY_2}`],
         },
     },
     etherscan: {
         apiKey: {
             polygonMumbai: `${POLYGON_MUMBAI_SCAN_KEY}`,
+            scrollSepolia: `${SCROLL_SEPOLIA_SCAN_KEY}`,
         },
+        customChains: [
+            {
+                network: "scrollSepolia",
+                chainId: 534351,
+                urls: {
+                    apiURL: "https://api-sepolia.scrollscan.com/api",
+                    browserURL: "https://sepolia.scrollscan.com",
+                },
+            },
+        ],
     },
 };
 

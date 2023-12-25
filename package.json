@@ -1,6 +1,6 @@
 {
   "name": "versa-omni-demo-contracts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "compile": "hardhat compile",
     "prettier": "npx prettier --write .",

@@ -1,7 +1,7 @@
 import hre, { ethers } from "hardhat";
 import lzChainIds from "./constants/lzChainIds.json";
 import polygonMumbaiAddresses from "../../deploy/addresses/polygonMumbai.json";
-import scrollAlphaAddresses from "../../deploy/addresses/scrollAlpha.json";
+import scrollSepoliaAddresses from "../../deploy/addresses/scrollSepolia.json";
 
 async function main() {
     let [signer] = await ethers.getSigners();
@@ -10,16 +10,16 @@ async function main() {
     switch (chainId) {
         case 80001: {
             contractAddress = polygonMumbaiAddresses["versaOmniFactory"];
-            dstChainId = lzChainIds["scroll-alpha"];
+            dstChainId = lzChainIds["scroll-sepolia"];
             sendOracle = "0xAeC5E56217a963BDe38a3b6e0C3Cb5E864450C86";
             receiveOracle = "0xAeC5E56217a963BDe38a3b6e0C3Cb5E864450C86";
             break;
         }
-        case 534353: {
-            contractAddress = scrollAlphaAddresses["versaOmniFactory"];
+        case 534351: {
+            contractAddress = scrollSepoliaAddresses["versaOmniFactory"];
             dstChainId = lzChainIds["polygon-mumbai"];
-            sendOracle = "0x3aCAAf60502791D199a5a5F0B173D78229eBFe32";
-            receiveOracle = "0x3aCAAf60502791D199a5a5F0B173D78229eBFe32";
+            sendOracle = "0x145C041566B21Bec558B2A37F1a5Ff261aB55998";
+            receiveOracle = "0x145C041566B21Bec558B2A37F1a5Ff261aB55998";
             break;
         }
         default: {

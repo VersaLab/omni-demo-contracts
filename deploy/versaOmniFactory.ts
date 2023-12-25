@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import * as deployer from "./helper/deployer";
 import { VersaOmniFactoryData } from "./helper/deployer";
 import polygonMumbaiAddresses from "./addresses/polygonMumbai.json";
-import scrollAlphaAddresses from "./addresses/scrollAlpha.json";
+import scrollSepoliaAddresses from "./addresses/scrollSepolia.json";
 import fs from "fs";
 
 async function deployWithAddresses(addresses: any) {
@@ -10,8 +10,8 @@ async function deployWithAddresses(addresses: any) {
         versaOmniSingleton: addresses.versaOmniSingleton,
         fallbackHandler: addresses.compatibilityFallbackHandler,
         lzEndpoint: addresses.lzEndpoint,
-        supportedChainIds: [80001, 534353],
-        supportedLzChainIds: [10109, 10170],
+        supportedChainIds: [80001, 534351],
+        supportedLzChainIds: [10109, 10214],
     };
     const versaOmniFactory = await deployer.deployVersaOmniFactory(versaOmniFactoryData);
     addresses.versaOmniFactory = versaOmniFactory.address;
@@ -29,10 +29,10 @@ async function main() {
             fs.writeFileSync("deploy/addresses/polygonMumbai.json", JSON.stringify(result, null, "\t"), "utf8");
             break;
         }
-        case 534353: {
-            const result = await deployWithAddresses(scrollAlphaAddresses);
-            console.log("writing changed address to output file 'deploy/addresses/scrollAlpha.json'");
-            fs.writeFileSync("deploy/addresses/scrollAlpha.json", JSON.stringify(result, null, "\t"), "utf8");
+        case 534351: {
+            const result = await deployWithAddresses(scrollSepoliaAddresses);
+            console.log("writing changed address to output file 'deploy/addresses/scrollSepolia.json'");
+            fs.writeFileSync("deploy/addresses/scrollSepolia.json", JSON.stringify(result, null, "\t"), "utf8");
             break;
         }
         default: {
